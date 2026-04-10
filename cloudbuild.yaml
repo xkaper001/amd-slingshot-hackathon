@@ -26,8 +26,8 @@ steps:
       - --cache-from
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest"
       - --file
-      - server/Dockerfile
-      - server/
+      - Dockerfile
+      - .
 
   # ── 2. Push image to Artifact Registry ─────────────────────
   - name: "gcr.io/cloud-builders/docker"

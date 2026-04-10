@@ -37,7 +37,7 @@ interface HistoryEntry {
   suggestions: Meal[];
 }
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = "";
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function healthBadgeClass(score: number) {

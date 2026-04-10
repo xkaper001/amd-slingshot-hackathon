@@ -1,11 +1,16 @@
 import express from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Set MOCK_MODE=true to bypass Gemini and return fake data (useful when quota is exhausted)
-const MOCK_MODE = process.env.MOCK_MODE === "true";
+const MOCK_MODE = process.env.MOCK_MODE === "false";
 
 // ─── CORS ──────────────────────────────────────────────────
 // Allow requests from the React dev server and production domain
@@ -27,6 +32,10 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// ─── Serve Frontend ────────────────────────────────────────
+// Serve the built React static files from the dist/ folder
+app.use(express.static(path.join(__dirname, "dist")));
 
 // ─── Gemini client ─────────────────────────────────────────
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -145,6 +154,12 @@ Rules:
 
 // ─── Health check ──────────────────────────────────────────
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
+// ─── React Router Fallback ────────────────────────────────
+// Any request that doesn't match an API route falls back to index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
 
 app.listen(PORT, () => {
   console.log(`NourishAI API server running on http://localhost:${PORT}`);
