@@ -1,0 +1,417 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap");
+
+/* ─── Design tokens ─────────────────────────────────────── */
+:root {
+  --nai-green-deep: #1a3d2b;
+  --nai-green-mid: #2d6a4f;
+  --nai-green-soft: #52b788;
+  --nai-green-pale: #b7e4c7;
+  --nai-cream: #f8f5ef;
+  --nai-cream-dark: #ede8df;
+  --nai-white: #ffffff;
+  --nai-text-primary: #0f2318;
+  --nai-text-muted: #5a7a66;
+  --nai-shadow-soft: 0 4px 24px rgba(26, 61, 43, 0.08),
+    0 1px 4px rgba(26, 61, 43, 0.06);
+  --nai-shadow-card: 0 20px 60px rgba(26, 61, 43, 0.12),
+    0 4px 16px rgba(26, 61, 43, 0.08);
+  --nai-radius: 20px;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+}
+
+/* ─── Root container ─────────────────────────────────────── */
+.signin-root {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  overflow: hidden;
+  background: var(--nai-cream);
+}
+
+/* ─── Animated background ────────────────────────────────── */
+.signin-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    #e8f5ee 0%,
+    #f8f5ef 35%,
+    #e4f0e8 65%,
+    #d8edd8 100%
+  );
+  z-index: 0;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  animation: blobFloat 12s ease-in-out infinite alternate;
+}
+
+.blob-1 {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, #b7e4c7 0%, transparent 70%);
+  top: -120px;
+  left: -100px;
+  animation-delay: 0s;
+  animation-duration: 14s;
+}
+
+.blob-2 {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, #74c69d 0%, transparent 70%);
+  bottom: -80px;
+  right: -60px;
+  animation-delay: -5s;
+  animation-duration: 10s;
+}
+
+.blob-3 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, #d8f3dc 0%, transparent 70%);
+  top: 40%;
+  left: 55%;
+  animation-delay: -3s;
+  animation-duration: 16s;
+}
+
+@keyframes blobFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.06);
+  }
+  100% {
+    transform: translate(-15px, 20px) scale(0.96);
+  }
+}
+
+/* ─── Grain texture overlay ──────────────────────────────── */
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+}
+
+/* ─── Botanical leaf accents ─────────────────────────────── */
+.leaf {
+  position: absolute;
+  color: var(--nai-green-mid);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.leaf-1 {
+  width: 100px;
+  height: 150px;
+  top: 8%;
+  right: 8%;
+  animation: leafSway 8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+.leaf-2 {
+  width: 72px;
+  height: 108px;
+  bottom: 12%;
+  left: 6%;
+  animation: leafSway 10s ease-in-out infinite alternate-reverse;
+  transform-origin: bottom center;
+  color: var(--nai-green-soft);
+}
+
+.leaf-3 {
+  width: 130px;
+  height: 78px;
+  top: 18%;
+  left: 5%;
+  animation: leafSway 12s ease-in-out infinite alternate;
+  transform-origin: left center;
+}
+
+@keyframes leafSway {
+  0% {
+    transform: rotate(-4deg) scale(1);
+  }
+  100% {
+    transform: rotate(4deg) scale(1.04);
+  }
+}
+
+/* ─── Card ───────────────────────────────────────────────── */
+.signin-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--nai-radius);
+  padding: 52px 48px 44px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--nai-shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: cardEntrance 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Logo mark ──────────────────────────────────────────── */
+.logo-mark {
+  width: 52px;
+  height: 52px;
+  color: var(--nai-green-mid);
+  margin-bottom: 20px;
+  animation: logoReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+@keyframes logoReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ─── Typography ─────────────────────────────────────────── */
+.signin-title {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: var(--nai-green-deep);
+  margin: 0 0 12px;
+  animation: textReveal 0.6s ease 0.25s both;
+}
+
+.title-accent {
+  color: var(--nai-green-soft);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.signin-tagline {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--nai-text-muted);
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  margin: 0;
+  animation: textReveal 0.6s ease 0.35s both;
+}
+
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Divider ────────────────────────────────────────────── */
+.signin-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 28px 0 24px;
+  animation: textReveal 0.6s ease 0.4s both;
+}
+
+.signin-divider span:first-child,
+.signin-divider span:last-child {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--nai-green-pale),
+    transparent
+  );
+}
+
+.divider-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--nai-green-soft);
+  opacity: 0.6;
+  flex: none !important;
+}
+
+/* ─── Sign-In Button ─────────────────────────────────────── */
+.signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--nai-white);
+  border: 1.5px solid var(--nai-green-pale);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--nai-text-primary);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(26, 61, 43, 0.06),
+    0 1px 2px rgba(26, 61, 43, 0.04);
+  position: relative;
+  overflow: hidden;
+  animation: textReveal 0.6s ease 0.48s both;
+}
+
+.signin-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(82, 183, 136, 0.07) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.signin-btn:hover {
+  border-color: var(--nai-green-soft);
+  box-shadow: 0 6px 20px rgba(26, 61, 43, 0.1),
+    0 2px 6px rgba(26, 61, 43, 0.06);
+  transform: translateY(-1px);
+}
+
+.signin-btn:hover::before {
+  opacity: 1;
+}
+
+.signin-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(26, 61, 43, 0.08);
+}
+
+.signin-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+/* ─── Google logo ────────────────────────────────────────── */
+.google-logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ─── Loading spinner ────────────────────────────────────── */
+.btn-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--nai-green-pale);
+  border-top-color: var(--nai-green-mid);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Error message ──────────────────────────────────────── */
+.signin-error {
+  font-size: 13px;
+  color: #c0392b;
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  background: rgba(192, 57, 43, 0.07);
+  border-radius: 8px;
+  border: 1px solid rgba(192, 57, 43, 0.18);
+  width: 100%;
+  box-sizing: border-box;
+  animation: textReveal 0.3s ease both;
+}
+
+/* ─── Footer note ────────────────────────────────────────── */
+.signin-footer {
+  font-size: 12px;
+  color: var(--nai-text-muted);
+  margin-top: 20px;
+  line-height: 1.7;
+  opacity: 0.8;
+  animation: textReveal 0.6s ease 0.56s both;
+}
+
+.signin-link {
+  color: var(--nai-green-mid);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.18s ease;
+}
+
+.signin-link:hover {
+  border-bottom-color: var(--nai-green-mid);
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .signin-card {
+    padding: 40px 28px 36px;
+    max-width: calc(100% - 32px);
+    margin: 16px;
+  }
+
+  .signin-title {
+    font-size: 42px;
+  }
+
+  .leaf-1 {
+    width: 70px;
+    height: 105px;
+  }
+
+  .leaf-3 {
+    display: none;
+  }
+}
