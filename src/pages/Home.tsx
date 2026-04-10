@@ -1,0 +1,411 @@
+import { useState, useEffect } from "react";
+import {
+  collection,
+  doc,
+  getDoc,
+  addDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { auth, db } from "../firebase";
+import "./Home.css";
+
+/* ─── Types ──────────────────────────────────────────────── */
+interface Nutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface Meal {
+  name: string;
+  description: string;
+  healthScore: number;
+  nutrition: Nutrition;
+  recipe: string[];
+  searchQuery: string;
+}
+
+interface HistoryEntry {
+  id: string;
+  craving: string;
+  createdAt: Date;
+  suggestions: Meal[];
+}
+
+const API_BASE = "http://localhost:3001";
+
+/* ─── Helpers ────────────────────────────────────────────── */
+function healthBadgeClass(score: number) {
+  if (score >= 8) return "badge--green";
+  if (score >= 5) return "badge--yellow";
+  return "badge--red";
+}
+
+/* ─── Skeleton card ──────────────────────────────────────── */
+function SkeletonCard() {
+  return (
+    <div className="meal-card meal-card--skeleton">
+      <div className="sk sk--title" />
+      <div className="sk sk--badge" />
+      <div className="sk sk--chips" />
+      <div className="sk sk--line" />
+      <div className="sk sk--line sk--short" />
+    </div>
+  );
+}
+
+/* ─── Meal card ──────────────────────────────────────────── */
+function MealCard({ meal }: { meal: Meal }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <article className="meal-card">
+      {/* Header */}
+      <div className="meal-card__header">
+        <h3 className="meal-name">{meal.name}</h3>
+        <span className={`health-badge ${healthBadgeClass(meal.healthScore)}`}>
+          ⚡ {meal.healthScore}/10
+        </span>
+      </div>
+
+      <p className="meal-desc">{meal.description}</p>
+
+      {/* Nutrition chips */}
+      <div className="nutrition-row" aria-label="Nutrition information">
+        <span className="nutr-chip nutr-chip--cal">
+          🔥 {meal.nutrition.calories} kcal
+        </span>
+        <span className="nutr-chip nutr-chip--protein">
+          💪 {meal.nutrition.protein}g protein
+        </span>
+        <span className="nutr-chip nutr-chip--carbs">
+          🍞 {meal.nutrition.carbs}g carbs
+        </span>
+        <span className="nutr-chip nutr-chip--fat">
+          🫒 {meal.nutrition.fat}g fat
+        </span>
+      </div>
+
+      {/* Collapsible recipe */}
+      <div className="recipe-section">
+        <button
+          className="recipe-toggle"
+          onClick={() => setOpen((p) => !p)}
+          aria-expanded={open}
+          aria-controls={`recipe-${meal.name}`}
+          type="button"
+        >
+          <span>Recipe steps</span>
+          <span className={`recipe-chevron ${open ? "recipe-chevron--open" : ""}`}>›</span>
+        </button>
+        {open && (
+          <ol className="recipe-steps" id={`recipe-${meal.name}`}>
+            {meal.recipe.map((step, i) => (
+              <li key={i} className="recipe-step">
+                <span className="step-num">{i + 1}</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      {/* Find Near Me */}
+      <a
+        className="find-near-btn"
+        href={`https://www.google.com/maps/search/${encodeURIComponent(meal.searchQuery)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Find ${meal.name} near me on Google Maps`}
+      >
+        <span>📍</span>
+        <span>Find Near Me</span>
+      </a>
+    </article>
+  );
+}
+
+/* ─── History tab ────────────────────────────────────────── */
+function HistoryTab() {
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    (async () => {
+      try {
+        const q = query(
+          collection(db, "users", user.uid, "history"),
+          orderBy("createdAt", "desc")
+        );
+        const snap = await getDocs(q);
+        setEntries(
+          snap.docs.map((d) => ({
+            id: d.id,
+            craving: d.data().craving,
+            createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
+            suggestions: d.data().suggestions ?? [],
+          }))
+        );
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="history-empty">
+        <span className="history-empty__icon">🔐</span>
+        <p>Sign in to see your history.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="history-list">
+        {[1, 2].map((i) => <SkeletonCard key={i} />)}
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="history-empty">
+        <span className="history-empty__icon">🍽️</span>
+        <p>No searches yet. Try finding a meal!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="history-list">
+      {entries.map((entry) => (
+        <div key={entry.id} className="history-entry">
+          <button
+            className="history-entry__header"
+            onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
+            type="button"
+          >
+            <div>
+              <span className="history-craving">"{entry.craving}"</span>
+              <span className="history-date">
+                {entry.createdAt.toLocaleDateString("en-IN", {
+                  day: "numeric", month: "short", year: "numeric",
+                  hour: "2-digit", minute: "2-digit",
+                })}
+              </span>
+            </div>
+            <span className={`recipe-chevron ${expanded === entry.id ? "recipe-chevron--open" : ""}`}>›</span>
+          </button>
+          {expanded === entry.id && (
+            <div className="history-entry__meals">
+              {entry.suggestions.map((meal, i) => (
+                <MealCard key={i} meal={meal} />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main Home component ────────────────────────────────── */
+export default function Home() {
+  const [tab, setTab] = useState<"discover" | "history">("discover");
+  const [craving, setCraving] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [meals, setMeals] = useState<Meal[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const user = auth.currentUser;
+
+  const handleFind = async () => {
+    if (!craving.trim()) return;
+    setLoading(true);
+    setError(null);
+    setMeals(null);
+
+    // Load user preferences from Firestore (best-effort)
+    let dietType = "";
+    let allergies: string[] = [];
+    if (user) {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          dietType = snap.data().dietType ?? "";
+          allergies = snap.data().allergies ?? [];
+        }
+      } catch (_) { /* skip */ }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/suggest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ craving: craving.trim(), dietType, allergies }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      const suggestions: Meal[] = data.suggestions;
+      setMeals(suggestions);
+
+      // Save to Firestore history (best-effort)
+      if (user) {
+        addDoc(collection(db, "users", user.uid, "history"), {
+          craving: craving.trim(),
+          suggestions,
+          createdAt: serverTimestamp(),
+        }).catch(console.error);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="home-root">
+      {/* Ambient blobs */}
+      <div className="home-bg">
+        <div className="home-blob home-blob-1" />
+        <div className="home-blob home-blob-2" />
+      </div>
+
+      <div className="home-shell">
+        {/* Top bar */}
+        <header className="home-topbar">
+          <div className="home-brand">
+            <span className="home-brand__leaf">🌿</span>
+            <span className="home-brand__name">NourishAI</span>
+          </div>
+          {user && (
+            <img
+              src={user.photoURL ?? ""}
+              alt={user.displayName ?? "User"}
+              className="home-avatar"
+            />
+          )}
+        </header>
+
+        {/* Tab bar */}
+        <nav className="home-tabs" aria-label="App sections">
+          <button
+            className={`home-tab${tab === "discover" ? " home-tab--active" : ""}`}
+            onClick={() => setTab("discover")}
+            type="button"
+            id="tab-discover"
+          >
+            ✨ Discover
+          </button>
+          <button
+            className={`home-tab${tab === "history" ? " home-tab--active" : ""}`}
+            onClick={() => setTab("history")}
+            type="button"
+            id="tab-history"
+          >
+            📋 History
+          </button>
+        </nav>
+
+        {/* ── Discover tab ── */}
+        {tab === "discover" && (
+          <div className="discover-pane">
+            {/* Craving input */}
+            <div className="craving-card">
+              <label className="craving-label" htmlFor="craving-input">
+                What are you craving right now?
+              </label>
+              <textarea
+                id="craving-input"
+                className="craving-textarea"
+                placeholder="e.g. something spicy and cheesy… or a light summer salad…"
+                value={craving}
+                onChange={(e) => setCraving(e.target.value)}
+                rows={3}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleFind();
+                }}
+              />
+              <button
+                id="find-options-btn"
+                className={`find-btn${loading ? " find-btn--loading" : ""}`}
+                onClick={handleFind}
+                disabled={loading || !craving.trim()}
+                type="button"
+              >
+                {loading ? (
+                  <>
+                    <span className="find-spinner" aria-hidden="true" />
+                    <span>Finding options…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Find Healthy Options</span>
+                    <span aria-hidden="true">→</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="result-error" role="alert">
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Skeletons */}
+            {loading && (
+              <div className="results-grid">
+                {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+              </div>
+            )}
+
+            {/* Results */}
+            {meals && !loading && (
+              <>
+                <p className="results-label">
+                  Here are 3 healthy options for <em>"{craving}"</em>
+                </p>
+                <div className="results-grid">
+                  {meals.map((meal, i) => (
+                    <MealCard key={i} meal={meal} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Empty state */}
+            {!meals && !loading && !error && (
+              <div className="discover-empty">
+                <div className="discover-empty__art">🥗</div>
+                <p>Type a craving above and let NourishAI do the rest.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── History tab ── */}
+        {tab === "history" && <HistoryTab />}
+      </div>
+    </div>
+  );
+}
