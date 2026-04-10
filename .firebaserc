@@ -1,0 +1,8 @@
+# ─────────────────────────────────────────────────────────────
+# .firebaserc — links this directory to the Firebase project
+# ─────────────────────────────────────────────────────────────
+{
+  "projects": {
+    "default": "micro-mediator-427111-v9"
+  }
+}

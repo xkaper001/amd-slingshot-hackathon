@@ -5,6 +5,7 @@ import {
   getDoc,
   addDoc,
   getDocs,
+  limit,
   orderBy,
   query,
   serverTimestamp,
@@ -142,7 +143,8 @@ function HistoryTab() {
       try {
         const q = query(
           collection(db, "users", user.uid, "history"),
-          orderBy("createdAt", "desc")
+          orderBy("createdAt", "desc"),
+          limit(10)
         );
         const snap = await getDocs(q);
         setEntries(
@@ -173,7 +175,17 @@ function HistoryTab() {
   if (loading) {
     return (
       <div className="history-list">
-        {[1, 2].map((i) => <SkeletonCard key={i} />)}
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="history-entry">
+            <div className="history-entry__header history-entry__header--sk">
+              <div className="history-entry__meta">
+                <div className="hsk hsk--craving" />
+                <div className="hsk hsk--date" />
+                <div className="hsk hsk--pills" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -182,40 +194,61 @@ function HistoryTab() {
     return (
       <div className="history-empty">
         <span className="history-empty__icon">🍽️</span>
-        <p>No searches yet. Try finding a meal!</p>
+        <p className="history-empty__title">No history yet — try your first search!</p>
       </div>
     );
   }
 
   return (
     <div className="history-list">
-      {entries.map((entry) => (
-        <div key={entry.id} className="history-entry">
-          <button
-            className="history-entry__header"
-            onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
-            type="button"
-          >
-            <div>
-              <span className="history-craving">"{entry.craving}"</span>
-              <span className="history-date">
-                {entry.createdAt.toLocaleDateString("en-IN", {
-                  day: "numeric", month: "short", year: "numeric",
-                  hour: "2-digit", minute: "2-digit",
-                })}
-              </span>
-            </div>
-            <span className={`recipe-chevron ${expanded === entry.id ? "recipe-chevron--open" : ""}`}>›</span>
-          </button>
-          {expanded === entry.id && (
-            <div className="history-entry__meals">
-              {entry.suggestions.map((meal, i) => (
-                <MealCard key={i} meal={meal} />
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+      {entries.map((entry) => {
+        const isOpen = expanded === entry.id;
+        return (
+          <div key={entry.id} className={`history-entry${isOpen ? " history-entry--open" : ""}`}>
+            {/* Compact header — always visible */}
+            <button
+              className="history-entry__header"
+              onClick={() => setExpanded(isOpen ? null : entry.id)}
+              type="button"
+              aria-expanded={isOpen}
+            >
+              <div className="history-entry__meta">
+                <span className="history-craving">“{entry.craving}”</span>
+                <span className="history-date">
+                  {entry.createdAt.toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {/* Meal name pills shown only when collapsed */}
+                {!isOpen && entry.suggestions.length > 0 && (
+                  <div className="history-meal-pills" aria-label="Suggested meals">
+                    {entry.suggestions.map((m, i) => (
+                      <span key={i} className="history-meal-pill">{m.name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span
+                className={`history-chevron${isOpen ? " history-chevron--open" : ""}`}
+                aria-hidden="true"
+              >›</span>
+            </button>
+
+            {/* Full meal cards, inline, when expanded */}
+            {isOpen && (
+              <div className="history-entry__meals">
+                {entry.suggestions.map((meal, i) => (
+                  <MealCard key={i} meal={meal} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

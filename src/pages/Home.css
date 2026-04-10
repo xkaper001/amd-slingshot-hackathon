@@ -427,57 +427,135 @@
 .discover-empty__art { font-size: 64px; margin-bottom: 16px; display: block; }
 
 /* ─── History ─────────────────────────────────────────────── */
-.history-list { display: flex; flex-direction: column; gap: 12px; }
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+
 .history-empty {
   text-align: center;
-  padding: 60px 20px;
+  padding: 64px 20px;
   color: var(--txt-muted);
-  font-weight: 300;
 }
-.history-empty__icon { font-size: 52px; display: block; margin-bottom: 12px; }
+.history-empty__icon { font-size: 56px; display: block; margin-bottom: 16px; }
+.history-empty__title {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--g-deep);
+  margin: 0;
+}
 
+/* Card shell */
 .history-entry {
-  background: rgba(255,255,255,0.82);
-  border: 1px solid rgba(255,255,255,0.7);
-  border-radius: var(--radius);
+  background: rgba(255,255,255,0.84);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.72);
+  border-radius: 16px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+  animation: fadeUp 0.35s ease both;
 }
+.history-entry:hover { box-shadow: var(--shadow-md); }
+.history-entry--open { box-shadow: var(--shadow-md); }
+
+/* Compact header button */
 .history-entry__header {
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 18px 20px;
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
-  gap: 12px;
-  transition: background 0.15s;
+  gap: 14px;
+  transition: background 0.15s ease;
 }
-.history-entry__header:hover { background: var(--g-ghost); }
+.history-entry__header:hover { background: rgba(232,245,238,.6); }
+.history-entry__header--sk { pointer-events: none; }
+
+.history-entry__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
 .history-craving {
-  display: block;
   font-family: var(--font-d);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 500;
   color: var(--g-deep);
   letter-spacing: -0.2px;
+  line-height: 1.2;
+  display: block;
+  /* Truncate very long cravings */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .history-date {
-  display: block;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--txt-muted);
   font-weight: 300;
+}
+
+/* Meal name pills (shown collapsed) */
+.history-meal-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.history-meal-pill {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--g-mid);
+  background: rgba(82,183,136,.1);
+  border: 1px solid rgba(82,183,136,.25);
+  border-radius: 100px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chevron */
+.history-chevron {
+  font-size: 22px;
+  color: var(--g-pale);
+  transition: transform 0.22s ease, color 0.15s ease;
+  display: inline-block;
+  flex-shrink: 0;
   margin-top: 2px;
 }
-.history-entry__meals {
-  padding: 0 16px 16px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
-  gap: 14px;
+.history-entry__header:hover .history-chevron { color: var(--g-soft); }
+.history-chevron--open {
+  transform: rotate(90deg);
+  color: var(--g-mid) !important;
 }
+
+/* Expanded meal grid */
+.history-entry__meals {
+  padding: 0 14px 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--g-ghost);
+}
+
+/* History skeleton */
+.hsk {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8f0eb 25%, #d8ead0 50%, #e8f0eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.hsk--craving { height: 20px; width: 55%; }
+.hsk--date    { height: 12px; width: 30%; margin-top: 4px; }
+.hsk--pills   { height: 22px; width: 80%; margin-top: 10px; border-radius: 100px; }
 
 /* ─── Utilities ───────────────────────────────────────────── */
 @keyframes fadeUp {
