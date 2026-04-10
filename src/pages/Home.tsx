@@ -1,16 +1,4 @@
 import { useState, useEffect } from "react";
-import {
-  collection,
-  doc,
-  getDoc,
-  addDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-} from "firebase/firestore";
-import { auth, db } from "../firebase";
 import "./Home.css";
 
 /* ─── Types ──────────────────────────────────────────────── */
@@ -135,42 +123,21 @@ function HistoryTab() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const user = auth.currentUser;
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    (async () => {
-      try {
-        const q = query(
-          collection(db, "users", user.uid, "history"),
-          orderBy("createdAt", "desc"),
-          limit(10)
-        );
-        const snap = await getDocs(q);
-        setEntries(
-          snap.docs.map((d) => ({
-            id: d.id,
-            craving: d.data().craving,
-            createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
-            suggestions: d.data().suggestions ?? [],
-          }))
-        );
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+    try {
+      const saved = localStorage.getItem("nourishai_history");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // localStorage dates parses as strings, map them back to Date objects
+        setEntries(parsed.map((e: any) => ({ ...e, createdAt: new Date(e.createdAt) })));
       }
-    })();
-  }, [user]);
-
-  if (!user) {
-    return (
-      <div className="history-empty">
-        <span className="history-empty__icon">🔐</span>
-        <p>Sign in to see your history.</p>
-      </div>
-    );
-  }
+    } catch (e) {
+      console.error("Failed to parse history", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -261,26 +228,15 @@ export default function Home() {
   const [meals, setMeals] = useState<Meal[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const user = auth.currentUser;
-
   const handleFind = async () => {
     if (!craving.trim()) return;
     setLoading(true);
     setError(null);
     setMeals(null);
 
-    // Load user preferences from Firestore (best-effort)
-    let dietType = "";
-    let allergies: string[] = [];
-    if (user) {
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          dietType = snap.data().dietType ?? "";
-          allergies = snap.data().allergies ?? [];
-        }
-      } catch (_) { /* skip */ }
-    }
+    // Hardcoded preferences for now (since auth/preferences screen is skipped)
+    const dietType = "";
+    const allergies: string[] = [];
 
     try {
       const res = await fetch(`${API_BASE}/api/suggest`, {
@@ -298,13 +254,19 @@ export default function Home() {
       const suggestions: Meal[] = data.suggestions;
       setMeals(suggestions);
 
-      // Save to Firestore history (best-effort)
-      if (user) {
-        addDoc(collection(db, "users", user.uid, "history"), {
+      // Save to localStorage history (up to 10 entries)
+      try {
+        const saved = JSON.parse(localStorage.getItem("nourishai_history") || "[]");
+        const newEntry: HistoryEntry = {
+          id: Date.now().toString(),
           craving: craving.trim(),
+          createdAt: new Date(),
           suggestions,
-          createdAt: serverTimestamp(),
-        }).catch(console.error);
+        };
+        const updated = [newEntry, ...saved].slice(0, 10);
+        localStorage.setItem("nourishai_history", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save history", e);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -328,13 +290,6 @@ export default function Home() {
             <span className="home-brand__leaf">🌿</span>
             <span className="home-brand__name">NourishAI</span>
           </div>
-          {user && (
-            <img
-              src={user.photoURL ?? ""}
-              alt={user.displayName ?? "User"}
-              className="home-avatar"
-            />
-          )}
         </header>
 
         {/* Tab bar */}

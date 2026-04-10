@@ -1,73 +1,62 @@
-# React + TypeScript + Vite
+# NourishAI 🌿
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Eat smarter, one craving at a time.
 
-Currently, two official plugins are available:
+NourishAI is a full-stack web application that uses Google's advanced Gemini AI to generate personalized, healthy meal suggestions based entirely on what you're craving. Rather than fighting your cravings, NourishAI provides nutritious, perfectly portioned alternatives, complete with health scores, macronutrient breakdowns, and easy-to-follow recipe steps.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features ✨
 
-## React Compiler
+- **Smart Cravings Engine:** Powered by Gemini 3 Flash, translating guilty pleasures into healthy, satisfying realities.
+- **Nutritional Insights:** Every generated meal includes a 1-10 health score and a detailed macro breakdown (Calories, Protein, Carbs, Fat).
+- **Collapsible Recipes:** Instantly see 3–5 actionable steps to make the meal right now.
+- **"Find Near Me" Integration:** Don't feel like cooking? One click instantly searches Google Maps for nearby restaurants serving the meal you selected.
+- **Local History Tracking:** Your recent searches and favorite suggestions are saved automatically, accessible anytime via the sleek History tab.
+- **Premium Organic UI:** Crafted with a calm, glassmorphic aesthetic—features soft animations, pill badges, and a custom beautiful design framework using vanilla CSS.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack 🛠
 
-## Expanding the ESLint configuration
+- **Frontend:** React + Vite, React Router, CSS Variables & Animations
+- **Backend:** Node.js, Express
+- **AI Integration:** `@google/generative-ai` (Gemini API)
+- **Deployment & Infra:** Docker, Google Cloud Run
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started (Local Development) 🚀
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 1. Backend Setup
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+From the root project directory, go into the `server` folder:
+```bash
+cd server
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the backend:
+```bash
+# Provide your Gemini API Key to use the live model
+GEMINI_API_KEY="your_api_key_here" npm start
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Or start it in mock-mode to bypass the API (great for UI testing)
+MOCK_MODE="true" npm start
 ```
+
+### 2. Frontend Setup
+
+Open a new terminal window in the root project directory:
+```bash
+npm install
+npm run dev
+```
+
+The frontend will run at `http://localhost:5173`. 
+*(Note: A local Vite proxy routes all `/api` calls safely to the backend on port 3001, avoiding CORS issues entirely).*
+
+## Deployment 🌐
+
+The app is containerized using a multi-stage `Dockerfile` which builds the frontend, grabs the backend dependencies, and bundles them into a single image to be served flawlessly via Cloud Run.
+
+To deploy via Google Cloud Build:
+```bash
+gcloud builds submit --config cloudbuild.yaml .
+```
+
+*See `DEPLOY.md` for a full, detailed runbook on one-time infrastructure setup and manual deployment options.*
